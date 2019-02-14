@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Take My Dog Please Roles And Policies'
+
+Resources:
+  TakeMyDogPleaseRegisterFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: TakeMyDogPleaseRegisterFunctionRolePolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - dynamodb:GetItem
+            Resource: arn:aws:dynamodb:*:*:table/*
+            Effect: Allow
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+
+  CloudformationTakeMyDogPleaseApi:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+      - PolicyName: CloudformationTakeMyDogPleaseAPI
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - cloudformation:*
+            Resource:
+            - "*"
+          - Effect: Allow
+            Action:
+            - lambda:*
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            Resource:
+            - arn:aws:s3:::take-my-dog-please/*
+          - Effect: Allow
+            Action:
+            - apigateway:*
+            Resource:
+            - "*"
+          - Effect: Allow
+            Action:
+            - dynamodb:*
+            Resource: arn:aws:dynamodb:*:*:table/*
+          - Effect: Allow
+            Action: iam:PassRole
+            Resource:
+              Fn::Sub: arn:aws:iam::*:role/${AWS::StackName}*
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - cloudformation.amazonaws.com
+
+Outputs:
+  TakeMyDogPleaseRegisterFunctionRoleArn:
+    Value:
+      Fn::GetAtt:
+      - TakeMyDogPleaseRegisterFunctionRole
+      - Arn
+    Description: The TakeMyDogPleaseRegisterFunctionRole Arn
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-TakeMyDogPleaseRegisterFunctionRoleArn"

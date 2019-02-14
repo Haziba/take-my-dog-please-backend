@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Take My Dog Please
+
+  '
+Parameters:
+  PolicyStackNameParameter:
+    Default: take-my-dog-please-iam
+    Type: String
+Resources:
+  TakeMyDogPleaseApi:
+    Properties:
+      DefinitionBody:
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /account/register:
+            post:
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                contextHandling: CONVERT_TO_TEXT
+                httpMethod: POST
+                passthroughBehaviour: when_no_match
+                responses:
+                  default:
+                    statusCode: '200'
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TakeMyDogPleaseRegisterFunction.Arn}/invocations
+        swagger: 2.0
+      StageName: Prod
+    Type: AWS::Serverless::Api
+  TakeMyDogPleaseRegisterFunction:
+    Properties:
+      CodeUri: s3://take-my-dog-please/b3e4157ca3231d2035cb66bd73f2e54c
+      Events:
+        ClientScript:
+          Properties:
+            Method: post
+            Path: /account/register
+            RestApiId:
+              Ref: TakeMyDogPleaseApi
+          Type: Api
+      Handler: TakeMyDogPlease.Register::TakeMyDogPlease.Register.Function::FunctionHandler
+      Role:
+        Fn::ImportValue:
+          Fn::Sub: ${PolicyStackNameParameter}-TakeMyDogPleaseRegisterFunctionRoleArn
+      Runtime: dotnetcore2.1
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
