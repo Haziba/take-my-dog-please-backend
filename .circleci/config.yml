@@ -1,0 +1,48 @@
+version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@0.1.9
+
+executors:
+  my-executor:
+    docker:
+      - image: buildpack-deps:jessi
+    working_directory: ~/take-my-dog-please-backend
+
+jobs:
+  build:
+    executor: my-executor
+    docker:
+      - image: microsoft/dotnet:2.1-sdk
+    steps:
+      - checkout
+      - run:
+          name: Publish
+          command: dotnet publish -o ./publish
+      - persist_to_workspace:
+          root: ./
+          paths: ./
+  deploy:
+    executor: my-executor
+    docker:
+      - image: circleci/python:2.7-jessie
+    steps:
+      - attach_workspace:
+          at: ~/take-my-dog-please-backend
+      - run:
+          name: Install awscli
+          command: sudo pip install awscli
+      - run:
+          name: Package to Cloudformation
+          command: aws cloudformation package --template-file template.yaml --s3-bucket take-my-dog-please --output-template-file template-output.yaml --region ${AWS_REGION}
+      - run:
+          name: Deploy to Cloudformation
+          command: aws cloudformation deploy --template-file template-output.yaml --stack-name take-my-dog-please --capabilities CAPABILITY_IAM --region ${AWS_REGION}
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
