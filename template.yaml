@@ -49,3 +49,19 @@ Resources:
                 httpMethod: "POST"
                 contextHandling: "CONVERT_TO_TEXT"
                 type: "aws_proxy"
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: 'tmdp-users'
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      AttributeDefinitions:
+      -
+        AttributeName: 'user_id'
+        AttributeType: 'S'
+      KeySchema:
+      -
+        AttributeName: 'user_id'
+        KeyType: 'HASH'
